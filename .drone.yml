@@ -1,0 +1,26 @@
+workspace:
+    base: /build
+    path: src
+
+pipeline:
+    build:
+        image: docker
+        commands:
+            - docker build -t localhost:5252/openproject-telegram:latest .
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
+
+    push:
+        image: docker
+        commands:
+            - docker push localhost:5252/openproject-telegram:latest
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
+
+    deploy:
+        image: docker
+        commands:
+            - docker stack deploy -c docker-compose.yml openproject-telegram
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
+            - /packages/openproject-telegram/envs:/build/src/envs:ro

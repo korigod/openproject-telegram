@@ -1,0 +1,6 @@
+version: '3.7'
+
+services:
+    openproject-telegram:
+        image: localhost:5252/openproject-telegram:latest
+        env_file: envs
