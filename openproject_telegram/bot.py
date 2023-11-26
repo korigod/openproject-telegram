@@ -1,6 +1,6 @@
 import os
-import requests
 import asyncio
+import aiohttp
 import logging
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters.command import Command
