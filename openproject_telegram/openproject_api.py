@@ -5,7 +5,7 @@ import aiohttp
 import aiogram
 import bs4
 
-from openproject_telegram import bot
+from openproject_telegram import telegram_bot
 
 openproject_url = os.environ['OPENPROJECT_URL']
 api_path = os.environ['OPENPROJECT_API_URL']
@@ -58,9 +58,9 @@ async def process_unread_notifications(api_key, telegram_user_id):
                             print(n['reason'], n['_embedded']['activity']['_type'])
                     if msg is not None:
                         try:
-                            await bot.bot.send_message(telegram_user_id, msg, parse_mode='HTML')
+                            await telegram_bot.bot.send_message(telegram_user_id, msg, parse_mode='HTML')
                         except aiogram.exceptions.TelegramBadRequest as e:
-                            await bot.bot.send_message(telegram_user_id, f'Error! {str(e)}', parse_mode='HTML')
+                            await telegram_bot.bot.send_message(telegram_user_id, f'Error! {str(e)}', parse_mode='HTML')
                         else:
                             # Remove Unread flag from notification so we won't fetch it next time
                             async with session.post(
@@ -69,12 +69,12 @@ async def process_unread_notifications(api_key, telegram_user_id):
                                 headers={"Content-Type": "application/json"}
                             ) as response:
                                 if response.status != 204:
-                                    await bot.bot.send_message(
+                                    await telegram_bot.bot.send_message(
                                         telegram_user_id,
                                         f'Read status update error, code {str(response.status)} {str(await response.text())}',
                                         parse_mode='HTML'
                                     )
-    await bot.session.close()
+    await telegram_bot.session.close()
 
 
 if __name__ == '__main__':
