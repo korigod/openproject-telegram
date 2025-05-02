@@ -27,7 +27,6 @@ async def get_users_telegram_ids(global_api_key):
             users = all_users_json['_embedded']['elements']
             user_id_to_telegram_id = {user['id']: user['customField1'] for user in users if user['customField1'] is not None}
             # customField1 is Telegram ID (integer)
-            print(user_id_to_telegram_id)
             return user_id_to_telegram_id
 
 
