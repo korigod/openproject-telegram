@@ -60,6 +60,19 @@ async def get_all_unread_notifications(api_key):
                             await bot.bot.send_message(os.environ['TELEGRAM_USER_ID'], msg, parse_mode='HTML')
                         except aiogram.exceptions.TelegramBadRequest as e:
                             await bot.bot.send_message(os.environ['TELEGRAM_USER_ID'], f'Error! {str(e)}', parse_mode='HTML')
+                        else:
+                            # Remove Unread flag from notification so we won't fetch it next time
+                            async with session.post(
+                                api_path + '/notifications/' + str(notification['id']) + '/read_ian',
+                                auth=aiohttp.BasicAuth('apikey', api_key),
+                                headers={"Content-Type": "application/json"}
+                            ) as response:
+                                if response.status != 204:
+                                    await bot.bot.send_message(
+                                        os.environ['TELEGRAM_USER_ID'],
+                                        f'Read status update error, code {str(response.status)} {str(await response.text())}',
+                                        parse_mode='HTML'
+                                    )
     await bot.session.close()
 
 
