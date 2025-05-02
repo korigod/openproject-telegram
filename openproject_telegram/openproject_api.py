@@ -112,7 +112,6 @@ async def process_unread_notifications(api_key, telegram_user_id):
                                         f'Read status update error, code {str(response.status)} {str(await response.text())}',
                                         parse_mode='HTML'
                                     )
-    await telegram_bot.session.close()
 
 
 if __name__ == '__main__':
