@@ -59,7 +59,7 @@ async def process_unread_notifications(api_key, telegram_user_id):
                     auth=aiohttp.BasicAuth('apikey', api_key)
                 ) as response:
                     n = await response.json()
-
+                    print(n, '\n')
                     try:
                         notification_activity_type = n['_embedded']['activity']['_type']
                     except KeyError:
