@@ -4,12 +4,38 @@ import asyncio
 import aiohttp
 import aiogram
 import bs4
+import csv
 
 from openproject_telegram import telegram_bot
 
 openproject_url = os.environ['OPENPROJECT_URL']
 api_path = os.environ['OPENPROJECT_API_URL']
 telegram_user_id = os.environ['TELEGRAM_USER_ID']
+
+
+async def get_users_telegram_ids(global_api_key):
+    async with aiohttp.ClientSession() as session:
+        async with session.get(
+            api_path + '/users',
+            auth=aiohttp.BasicAuth('api_global', global_api_key),
+            params={
+                'pageSize': 1000,
+                'sortBy': '[["id", "asc"]]'
+            }
+        ) as all_users_response:
+            all_users_json = await all_users_response.json()
+            users = all_users_json['_embedded']['elements']
+            user_id_to_telegram_id = {user['id']: user['customField1'] for user in users if user['customField1'] is not None}
+            # customField1 is Telegram ID (integer)
+            print(user_id_to_telegram_id)
+            return user_id_to_telegram_id
+
+
+def read_users_api_keys(users_api_keys_csv_file_path):
+    with open(users_api_keys_csv_file_path) as f:
+        csv_rows = csv.DictReader(f)
+        user_id_to_api_key = {int(user['user_id']): user['api_key'] for user in csv_rows}
+        return user_id_to_api_key
 
 
 async def process_unread_notifications(api_key, telegram_user_id):
@@ -49,13 +75,18 @@ async def process_unread_notifications(api_key, telegram_user_id):
                                     openproject_url + n['_links']['resource']['href'].removeprefix('/api/v3')
                                 }">{n['_links']['resource']['title']}</a></b>'''
                             msg += f"\nКомментарий {n['_embedded']['actor']['name']}: "
-                            comment_html = bs4.BeautifulSoup(n['_embedded']['activity']['comment']['html'], features="lxml")
+                            comment_html = bs4.BeautifulSoup(n['_embedded']['activity']['comment']['html'], features='lxml')
                             mentions = comment_html.find_all('a', {'class': 'user-mention op-uc-link'})
                             for m in mentions:
                                 m.replace_with(f'<i>{m.text}</i>')
                             msg += comment_html.get_text()
                         case _:
-                            print(n['reason'], n['_embedded']['activity']['_type'])
+                            try:
+                                msg = n['reason'] + '\n' + n['_embedded']['activity']['_type'] + '\n' + n['_embedded']['activity']['details']
+                            except KeyError:
+                                pass
+                            else:
+                                print(msg)
                     if msg is not None:
                         try:
                             await telegram_bot.bot.send_message(telegram_user_id, msg, parse_mode='HTML')
@@ -81,3 +112,5 @@ if __name__ == '__main__':
     asyncio.run(process_unread_notifications(
         api_key=os.environ['OPENPROJECT_API_KEY'], telegram_user_id=telegram_user_id
     ))
+    asyncio.run(get_users_telegram_ids(os.environ['OPENPROJECT_GLOBAL_API_KEY']))
+    print(read_users_api_keys('users'))
