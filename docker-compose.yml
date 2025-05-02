@@ -4,3 +4,5 @@ services:
     openproject-telegram:
         image: localhost:5252/openproject-telegram:latest
         env_file: envs
+        volumes:
+            - /packages/openproject-telegram/users:/app/users
