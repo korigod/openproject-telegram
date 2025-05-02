@@ -9,9 +9,10 @@ from openproject_telegram import bot
 
 openproject_url = os.environ['OPENPROJECT_URL']
 api_path = os.environ['OPENPROJECT_API_URL']
+telegram_user_id = os.environ['TELEGRAM_USER_ID']
 
 
-async def get_all_unread_notifications(api_key):
+async def process_unread_notifications(api_key, telegram_user_id):
     unread_filter = {"readIAN": {"operator": "=", "values": "f"}}
     filters = [unread_filter]
     filters_str = json.dumps(filters)
@@ -57,9 +58,9 @@ async def get_all_unread_notifications(api_key):
                             print(n['reason'], n['_embedded']['activity']['_type'])
                     if msg is not None:
                         try:
-                            await bot.bot.send_message(os.environ['TELEGRAM_USER_ID'], msg, parse_mode='HTML')
+                            await bot.bot.send_message(telegram_user_id, msg, parse_mode='HTML')
                         except aiogram.exceptions.TelegramBadRequest as e:
-                            await bot.bot.send_message(os.environ['TELEGRAM_USER_ID'], f'Error! {str(e)}', parse_mode='HTML')
+                            await bot.bot.send_message(telegram_user_id, f'Error! {str(e)}', parse_mode='HTML')
                         else:
                             # Remove Unread flag from notification so we won't fetch it next time
                             async with session.post(
@@ -69,7 +70,7 @@ async def get_all_unread_notifications(api_key):
                             ) as response:
                                 if response.status != 204:
                                     await bot.bot.send_message(
-                                        os.environ['TELEGRAM_USER_ID'],
+                                        telegram_user_id,
                                         f'Read status update error, code {str(response.status)} {str(await response.text())}',
                                         parse_mode='HTML'
                                     )
@@ -77,4 +78,6 @@ async def get_all_unread_notifications(api_key):
 
 
 if __name__ == '__main__':
-    asyncio.run(get_all_unread_notifications(api_key=os.environ['OPENPROJECT_API_KEY']))
+    asyncio.run(process_unread_notifications(
+        api_key=os.environ['OPENPROJECT_API_KEY'], telegram_user_id=telegram_user_id
+    ))
