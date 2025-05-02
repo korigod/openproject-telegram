@@ -61,8 +61,14 @@ async def process_unread_notifications(api_key, telegram_user_id):
                 ) as response:
                     n = await response.json()
 
+                    try:
+                        notification_activity_type = n['_embedded']['activity']['_type']
+                    except KeyError:
+                        print(n)
+                        await telegram_bot.bot.send_message(telegram_user_id, str(n), parse_mode='HTML')
+                        continue
                     msg = None
-                    match n['_embedded']['activity']['_type']:
+                    match notification_activity_type:
                         case 'Activity':
                             msg = f'''Задача: <b><a href="{
                                     openproject_url + n['_links']['resource']['href'].removeprefix('/api/v3')
@@ -91,6 +97,7 @@ async def process_unread_notifications(api_key, telegram_user_id):
                         try:
                             await telegram_bot.bot.send_message(telegram_user_id, msg, parse_mode='HTML')
                         except aiogram.exceptions.TelegramBadRequest as e:
+                            print(e)
                             await telegram_bot.bot.send_message(telegram_user_id, f'Error! {str(e)}', parse_mode='HTML')
                         else:
                             # Remove Unread flag from notification so we won't fetch it next time
