@@ -13,6 +13,5 @@ RUN apt-get update \
     && apt-get purge -y --auto-remove gcc libc-dev
 
 COPY openproject_telegram /app/openproject_telegram
-COPY users /app/users
 
 CMD ["python", "-m", "openproject_telegram.app"]
