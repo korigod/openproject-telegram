@@ -63,8 +63,7 @@ async def process_unread_notifications(api_key, telegram_user_id):
                     try:
                         notification_activity_type = n['_embedded']['activity']['_type']
                     except KeyError:
-                        print(n)
-                        await telegram_bot.bot.send_message(telegram_user_id, str(n), parse_mode='HTML')
+                        print('No activity field!', n, '\n')
                         continue
                     msg = None
                     match notification_activity_type:
