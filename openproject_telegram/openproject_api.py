@@ -73,13 +73,18 @@ async def process_unread_notifications(api_key, telegram_user_id):
                                 }">{n['_links']['resource']['title']}</a></b>'''
                             for d in n['_embedded']['activity']['details']:
                                 msg += '\n'
-                                msg += d['html']
+                                msg_html = bs4.BeautifulSoup(d['html'], features='lxml')
+                                for span_tag in msg_html.find_all('span', {'class': 'hidden-for-sighted'}):
+                                    span_tag.decompose()
+                                msg += "".join([str(x) for x in msg_html.body.children])
                         case 'Activity::Comment':
                             msg = f'''Задача: <b><a href="{
                                     openproject_url + n['_links']['resource']['href'].removeprefix('/api/v3')
                                 }">{n['_links']['resource']['title']}</a></b>'''
                             msg += f"\nКомментарий {n['_embedded']['actor']['name']}: "
                             comment_html = bs4.BeautifulSoup(n['_embedded']['activity']['comment']['html'], features='lxml')
+                            for span_tag in comment_html.find_all('span', {'class': 'hidden-for-sighted'}):
+                                span_tag.decompose()
                             mentions = comment_html.find_all('a', {'class': 'user-mention op-uc-link'})
                             for m in mentions:
                                 m.replace_with(f'<i>{m.text}</i>')
