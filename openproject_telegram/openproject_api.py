@@ -104,7 +104,7 @@ async def process_unread_notifications(api_key, telegram_user_id):
                             await telegram_bot.bot.send_message(telegram_user_id, f'Error! {str(e)}', parse_mode='HTML')
                         except aiogram.exceptions.TelegramRetryAfter as e:
                             print(e, "\nTelegram User ID:", telegram_user_id)
-                        else:
+                        finally:
                             # Remove Unread flag from notification so we won't fetch it next time
                             async with session.post(
                                 api_path + '/notifications/' + str(notification['id']) + '/read_ian',
