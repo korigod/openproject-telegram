@@ -63,7 +63,19 @@ async def process_unread_notifications(api_key, telegram_user_id):
                     try:
                         notification_activity_type = n['_embedded']['activity']['_type']
                     except KeyError:
-                        print('No activity field!', n, '\n')
+                        print('Error: No activity field! Notification below:', '\n\n', n, '\n')
+                        # Remove Unread flag from notification so we won't fetch it next time
+                        async with session.post(
+                            api_path + '/notifications/' + str(notification['id']) + '/read_ian',
+                            auth=aiohttp.BasicAuth('apikey', api_key),
+                            headers={"Content-Type": "application/json"}
+                        ) as response:
+                            if response.status != 204:
+                                await telegram_bot.bot.send_message(
+                                    telegram_user_id,
+                                    f'Read status update error, code {str(response.status)} {str(await response.text())}',
+                                    parse_mode='HTML'
+                                )
                         continue
                     msg = None
                     match notification_activity_type:
